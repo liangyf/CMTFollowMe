@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.rnma.ichpoc.mapper.MockMapper">
+	<insert id="mockNotification"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO
+		xx_alarm_push_log
+		(username,createtime,type)
+		VALUES
+		(#{username},#{createtime},#{type})
+	</insert>
+	<insert id="saveHealthReportMock"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO xx_health_report(
+		title,
+		username,
+		type,
+		createtime,
+		updatetime
+		)
+		VALUES(
+		#{title},
+		#{username},
+		#{type},
+		#{createtime},
+		#{createtime}
+		)
+	</insert>
+	<select id="listCandidate"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		title,
+		content
+		FROM xx_articles
+		WHERE type='健康助手'
+	</select>
+	<insert id="saveAssistant"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO xx_assistant_push_log (username,title,content,createtime)
+		VALUES(#{username},#{title},#{content},#{createtime})
+	</insert>
+</mapper>

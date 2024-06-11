@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.neusoft.rnma.ichpoc.mapper.HealthProfileMapper">
+	<update id="upgradeProfile"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		UPDATE xx_health_profile SET
+		name=#{name},
+		male=#{male},
+		createtime=#{createtime},
+		updatetime=#{createtime},
+		bmi=#{bmi},
+		basic_height=#{basic_height},
+		basic_weight=#{basic_weight},
+		basic_age=#{basic_age},
+		basic_waistline=#{basic_waistline},
+		basic_hipsline=#{basic_hipsline},
+		bp_high=#{bp_high},
+		bp_low=#{bp_low},
+		bp_updatetime=#{createtime},
+		bp_fromstr=#{bp_fromstr},
+		mer_result=#{mer_result},
+		mer_result_proposal=#{mer_result_proposal},
+		mer_doctor=#{mer_doctor},
+		mer_updatetime=#{createtime},
+		mer_anomalies_nums=#{mer_anomalies_nums}
+		WHERE username=#{username}
+	</update>
+	<update id="upgradeBasicProfile"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		UPDATE xx_health_profile
+		<set>
+			<if test="height>0">basic_height=#{height},</if>
+			<if test="weight>0">basic_weight=#{weight},</if>
+			<if test="waistline>0">basic_waistline=#{waistline},</if>
+			<if test="hipsline>0">basic_hipsline=#{hipsline},</if>
+			<if test="smoke!=null">basic_smoke=#{smoke},</if>
+			<if test="drink!=null">basic_drink=#{drink},</if>
+			<if test="exercise!=null">basic_exercise=#{exercise},</if>
+			<if test="labor!=null">basic_labor=#{labor},</if>
+			<if test="diet!=null">basic_diet=#{diet},</if>
+			<if test="misc!=null">basic_misc=#{misc},</if>
+			<if test="age!=null">basic_age=#{age},</if>
+			updatetime=#{updatetime}
+		</set>
+		WHERE username=#{username};
+		UPDATE xx_user
+		SET
+		lockbits=(lockbits|#{lockBits})
+		WHERE
+		username=#{username}
+	</update>
+	<!-- Deprecated -->
+	<update id="upgradeDataFromDevice"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		UPDATE xx_health_profile
+		SET
+		bp_high=#{bph},
+		bp_low=#{bpl},
+		bp_updatetime=#{createtime},
+		bp_fromstr=#{source},
+		updatetime=#{createtime}
+		WHERE
+		username=#{username}
+	</update>
+	<select id="summary"
+		resultType="com.alibaba.fastjson.JSONObject"
+		parameterType="java.lang.String">
+		SELECT name AS display,
+		total_score AS summary,
+		basic_height AS height,
+		basic_weight AS weight,
+		basic_age AS age,
+		bmi,
+		heart_rate AS hr,
+		respiratory_rate AS rr,
+		tired_tag AS tired,
+		ivi_conclusion AS conclusion,
+		bp_high AS bph,
+		bp_low AS bpl,
+		basic_waistline AS waistline,
+		basic_hipsline AS hipsline,
+		basic_smoke AS
+		smoke,
+		basic_drink AS drink,
+		basic_exercise AS exercise,
+		basic_labor AS
+		labor,
+		basic_misc AS misc,
+		basic_diet AS diet,
+		bp_updatetime AS htime,
+		mer_updatetime AS
+		ptime,
+		tired_updatetime AS vtime,
+		updatetime AS time
+		FROM
+		xx_health_profile WHERE
+		username=#{username}
+	</select>
+
+	<select id="getScores"
+		resultType="com.alibaba.fastjson.JSONObject"
+		parameterType="java.lang.String">
+		SELECT
+		total_score AS sum,
+		pe_score AS spe,
+		live_score AS sl,
+		tired_score AS st,
+		bp_score AS sbp,
+		hr_score AS shr
+		FROM
+		xx_health_profile
+		WHERE
+		username=#{username}
+	</select>
+	<select id="tips" parameterType="java.lang.String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		a.id AS id, a.title AS title
+		FROM
+		xx_articles a,
+		xx_ref_tag_article b,
+		xx_ref_tag_user c,
+		xx_user d
+		WHERE
+		a.id =
+		b.article_id
+		AND b.tag_id = c.tag_id
+		AND c.user_id = d.id
+		AND
+		d.username=#{username}
+	</select>
+	<select id="tags" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT mer_result FROM
+		xx_health_profile WHERE
+		username=#{username}
+	</select>
+	<!-- 为用户添加一个健康标签及建议 -->
+	<update id="addTag">
+		UPDATE xx_health_profile SET
+		mer_result=JSON_UNQUOTE(#{result})
+		WHERE username=#{username};
+	</update>
+	<select id="reports" parameterType="String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		id,
+		title,
+		type,
+		createtime,
+		proportion,
+		bp_total_times,
+		bp_abnormal_times,
+		bp_hight_max,
+		tired_total_times,
+		tired_abnormal_times,
+		heart_total_times,
+		heart_abnormal_times,
+		respiratory_total_times,
+		respiratory_abnormal_times,
+		respiratory_rate_max
+		FROM xx_health_report
+		WHERE username=#{username}
+		ORDER BY createtime DESC
+	</select>
+	<select id="collectArticlesByTag" parameterType="String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		a.id AS id,
+		a.type AS type,
+		a.cover_image AS coverImage,
+		a.title AS title,
+		a.createtime AS createtime
+		FROM xx_articles a,xx_tags b,xx_ref_tag_article c
+		WHERE
+		b.name=#{tag} AND b.id=c.tag_id AND c.article_id=a.id
+	</select>
+	<select id="article" parameterType="int"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		a.type,
+		a.title,
+		a.content,
+		a.createtime,
+	    GROUP_CONCAT(t.name) AS tags
+		FROM xx_articles a,xx_tags t,xx_ref_tag_article r
+		WHERE r.article_id=a.id AND r.article_id=#{id} AND r.tag_id=t.id
+	</select>
+</mapper>

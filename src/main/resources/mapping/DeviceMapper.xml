@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.rnma.ichpoc.mapper.DeviceMapper">
+	<!-- useGeneratedKeys="true" keyProperty="id" -->
+	<insert id="bind"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		<!-- INSERT INTO xx_device (deviceid, name, username, createtime) VALUES 
+			(#{id},#{name},#{username},#{createtime}); -->
+		INSERT INTO xx_device
+		<set>
+			<if test="mac!=null  and mac!=''">device_mac=#{mac},</if>
+			deviceid=#{id},
+			name=#{name},
+			username=#{username},
+			createtime=#{createtime}
+		</set>
+	</insert>
+	<select id="list" resultType="com.alibaba.fastjson.JSONObject"
+		parameterType="java.lang.String">
+		SELECT
+		deviceid AS id,
+		name AS name,
+		createtime,
+		device_mac
+		AS mac
+		FROM xx_device where
+		username=#{username}
+	</select>
+	<insert id="saveRecordFromHome"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO
+		xx_device_history
+		(deviceid,bph,bpl,createtime,status,username)
+		VALUES
+		(#{deviceId},#{bph},#{bpl},#{createtime},#{status},#{username});
+		UPDATE
+		xx_health_profile
+		SET
+		bp_high=#{bph},
+		bp_low=#{bpl},
+		bp_updatetime=#{createtime},
+		bp_fromstr=#{source},
+		updatetime=#{createtime}
+		WHERE
+		username=#{username}
+	</insert>
+	<insert id="saveRecordFromIVI"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO
+		xx_ivi_history
+		(username,createtime,hr,br,tired,conclusion,description)
+		VALUES
+		(#{username},#{createtime},#{hr},#{br},#{tired},#{conclusion},#{description});
+		UPDATE xx_health_profile
+		SET
+		heart_rate=#{hr},
+		heart_rate_fromstr=#{source},
+		heart_rate_updatetime=#{createtime},
+		respiratory_rate=#{br},
+		tired_tag=#{tired},
+		ivi_conclusion=#{conclusion},
+		tired_fromstr=#{source},
+		tired_updatetime=#{createtime},
+		updatetime=#{createtime}
+		WHERE
+		username=#{username}
+	</insert>
+	<select id="historyHome"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		id, bph, bpl, createtime
+		FROM
+		xx_device_history
+		WHERE
+		username = #{username}
+		ORDER BY createtime DESC
+	</select>
+	<delete id="unbind" parameterType="java.lang.String">
+		DELETE FROM xx_device
+		WHERE
+		username = #{username} AND deviceid =
+		#{deviceId};
+		<!-- DELETE FROM xx_device_history WHERE username=#{username} AND deviceid=#{deviceId} -->
+	</delete>
+	<delete id="removeHistoryHome" parameterType="int[]">
+		DELETE FROM xx_device_history
+		WHERE
+		id IN
+		<foreach collection="array" item="arr" index="id" open="("
+			separator="," close=")">
+			#{arr}
+		</foreach>
+	</delete>
+	<update id="rollbackHome">
+		UPDATE xx_health_profile AS dest,(SELECT bph,bpl,createtime FROM xx_device_history WHERE username=#{username} ORDER BY createtime DESC LIMIT 1) AS src
+		SET dest.bp_high=src.bph,
+		dest.bp_low=src.bpl,
+		dest.bp_updatetime=src.createtime,
+		dest.updatetime=#{updatetime}
+		WHERE dest.username=#{username}
+	</update>
+	<select id="historyIVI"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		id, createtime, hr, br, tired, conclusion,
+		description
+		FROM
+		xx_ivi_history
+		WHERE
+		username = #{username}
+		ORDER BY
+		createtime DESC
+	</select>
+	<delete id="removeHistoryIVI" parameterType="int[]">
+		DELETE FROM xx_ivi_history
+		WHERE
+		id IN
+		<foreach collection="array" item="arr" index="id" open="("
+			separator="," close=")">
+			#{arr}
+		</foreach>
+	</delete>
+	<update id="rollbackIVI">
+		UPDATE xx_health_profile AS dest,(SELECT hr,br,tired,conclusion,createtime FROM xx_ivi_history WHERE username=#{username} ORDER BY createtime DESC LIMIT 1) AS src
+		SET
+		dest.heart_rate=src.hr,
+		dest.heart_rate_fromstr='车内健康设备',
+		dest.heart_rate_updatetime=src.createtime,
+		dest.respiratory_rate=src.br,
+		dest.tired_tag=src.tired,
+		dest.ivi_conclusion=src.conclusion,
+		dest.tired_fromstr='车内健康设备',
+		dest.tired_updatetime=src.createtime,
+		dest.updatetime=#{updatetime}
+		WHERE dest.username=#{username}
+	</update>
+
+	<select id="iviHistoryCount" resultType="Integer">
+		select count(*) from xx_ivi_history where username=#{username}
+	</select>
+
+	<update id="resetIvi">
+		update xx_health_profile
+		set
+		heart_rate=null,
+		heart_rate_fromstr=null,
+		respiratory_rate=null,
+		tired_tag=null,
+		ivi_conclusion=null,
+		tired_fromstr=null,
+		hr_score=-1,
+		tired_score=-1
+		where username=#{username}
+	</update>
+
+	<select id="deviceHistoryCount" resultType="Integer">
+		select count(*) from xx_device_history where username=#{username}
+	</select>
+
+	<update id="resetDevice">
+		update xx_health_profile
+		set
+		bp_high=null,
+		bp_low=null,
+		bp_score=-1
+		where username=#{username}
+	</update>
+</mapper>

@@ -1,0 +1,53 @@
+server:
+  port: 80
+logging:
+  level:
+    root: INFO
+spring:
+  main:
+    banner-mode: off
+  cache: 
+    type: SIMPLE
+  profiles:
+    active: valueset
+  application:
+    name: ich
+  jackson: 
+    default-property-inclusion: non_empty
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.10.94.239:3306/driverHealth?failOverReadOnly=false&allowMultiQueries=true
+    username: driverHealth
+    password: acA8wmhNAiDLcSet
+    #url: jdbc:mysql://172.16.5.145:3306/driverHealth?failOverReadOnly=false&allowMultiQueries=true    
+    #url: jdbc:mysql://106.14.61.186:3306/driverhealth?failOverReadOnly=false&allowMultiQueries=true
+    #username: root
+    #password: 1qaz!QAZ
+jwt:
+  secret: allianceichpoc
+  #token expired time limit, seconds
+  validity: 86400
+  excludes: signin,signup,actuator,index.html,favicon.ico,icon.css,js,img,fonts,css
+blackList: 
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:mapping/*.xml
+  type-aliases-package: com.neusoft.ich.backend.repositories
+management:
+  server: 
+    port: 8374
+    address: 127.0.0.1
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+    info:
+      enabled: true
+    restart:
+      enabled: true

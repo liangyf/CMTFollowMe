@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.rnma.ichpoc.mapper.SystemMapper">
+	<insert id="insertAccount"
+		parameterType="com.alibaba.fastjson.JSONObject">
+		INSERT INTO xx_user (username,password,createtime,avatar)
+		VALUES
+		(#{username},#{password},#{createtime},#{avatar});
+		INSERT INTO
+		xx_health_profile(username,createtime,updatetime,mer_result)
+		VALUES
+		(#{username},#{createtime},#{createtime},'[]');
+	</insert>
+	<select id="getCredentialByUsername" parameterType="String"
+		resultType="String">
+		select password from
+		xx_user where username=#{username}
+	</select>
+	<select id="getProfile"
+		resultType="com.alibaba.fastjson.JSONObject" parameterType="String">
+		select
+		display, setting, authorized,lockbits,avatar from xx_user where
+		username=#{username}
+	</select>
+	<update id="upgradeSetting">
+		update xx_user set setting=#{setting} where
+		username=#{username}
+	</update>
+	<update id="upgradeAuthorized">
+		update xx_user set authorized=#{agree} where
+		username=#{username}
+	</update>
+	<select id="pull1" parameterType="String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		type, content, createtime
+		FROM
+		xx_alarm_push_log
+		WHERE
+		username = #{username} and
+		read_status='unread'
+		ORDER BY createtime
+		DESC;
+		UPDATE
+		xx_alarm_push_log
+		SET read_status = 'read'
+		WHERE
+		username =
+		#{username}
+	</select>
+	<select id="pull2" parameterType="String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+		id,
+		title,
+		type,
+		createtime,
+		proportion,
+		bp_total_times,
+		bp_abnormal_times,
+		bp_hight_max,
+		tired_total_times,
+		tired_abnormal_times,
+		heart_total_times,
+		heart_abnormal_times,
+		respiratory_total_times,
+		respiratory_abnormal_times,
+		respiratory_rate_max
+		FROM xx_health_report
+		WHERE username=#{username}
+		AND read_status='unread'
+		ORDER BY createtime DESC;
+		UPDATE
+		xx_health_report
+		SET read_status='read'
+		WHERE username=#{username}
+	</select>
+	<select id="pull3" parameterType="String"
+		resultType="com.alibaba.fastjson.JSONObject">
+		SELECT
+		title,
+		content,
+		createtime
+		FROM xx_assistant_push_log
+		WHERE username=#{username} AND read_status='unread'
+		ORDER BY createtime DESC;
+		UPDATE xx_assistant_push_log
+		SET read_status='read'
+		WHERE username=#{username}
+	</select>
+	<delete id="deleteHealthReport" parameterType="int[]">
+		DELETE FROM xx_health_report WHERE id IN
+		<foreach collection="array" item="arr" index="id" open="("
+			separator="," close=")">
+			#{arr}
+		</foreach>
+	</delete>
+</mapper>

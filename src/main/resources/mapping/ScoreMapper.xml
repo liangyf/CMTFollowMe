@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.rnma.ichpoc.mapper.ScoreMapper">
+	<select id="collectRecentOfBp" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT status, COUNT(*) AS count
+		FROM (
+		SELECT his.status AS status
+		FROM xx_device_history his
+		WHERE his.username=#{username} AND createtime>#{offset}
+		ORDER BY his.createtime DESC
+		LIMIT 10) AS candi
+		GROUP BY candi.status
+	</select>
+	<update id="upgradeBp">
+		UPDATE xx_health_profile SET bp_score=#{score} WHERE
+		username=#{username}
+	</update>
+	<select id="collectRecentOfIVI" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT tired,conclusion,hr,br
+		FROM
+		xx_ivi_history
+		WHERE username=#{username} AND createtime>#{offset}
+		ORDER BY createtime DESC
+		LIMIT 10
+	</select>
+	<select id="timeOfTired" resultType="int">
+		SELECT COUNT(*)
+		FROM
+		xx_ivi_history
+		WHERE username=#{username} AND createtime>#{offset} AND
+		tired='疲劳'
+	</select>
+	<update id="upgradeTired">
+		UPDATE xx_health_profile SET tired_score=#{score}
+		WHERE
+		username=#{username}
+	</update>
+	<select id="collectAbnormal" resultType="int">
+		SELECT anomalies_nums
+		FROM xx_medical_report
+		WHERE username=#{username}
+	</select>
+<update id="upgradePe">
+		UPDATE xx_health_profile SET pe_score=#{score}
+		WHERE
+		username=#{username}
+	</update>
+	<update id="upgradeHr">
+		UPDATE xx_health_profile SET hr_score=#{score}
+		WHERE
+		username=#{username}
+	</update>
+	<update id="upgradeLive">
+		UPDATE xx_health_profile SET live_score=#{score}
+		WHERE
+		username=#{username}
+	</update>
+	<select id="getLiveScore" resultType="java.lang.Integer">
+		select live_score from xx_health_profile where username=#{username}
+	</select>
+</mapper>
